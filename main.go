@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"log"
@@ -10,26 +11,36 @@ import (
 	"time"
 )
 
-func main() {
-	// "Signin" and "Welcome" are the handlers that we will implement
-	http.HandleFunc("/signin", Signin)
-	http.HandleFunc("/welcome", Welcome)
-	http.HandleFunc("/refresh", Refresh)
-	log.Fatal(http.ListenAndServeTLS(":8113", "/usr/local/nodes/certs/server.crt", "/usr/local/nodes/certs/server.key", nil))
-}
-
-var jwtKey = []byte("my_secret_key")
-
 // Create a struct that models the structure of a user in the request body
 type Credentials struct {
 	Password string `json:"password"`
 	Username string `json:"username"`
 }
 
-//
+// Output from decrypting a token
 type Claims struct {
 	Username string `json:"username"`
 	jwt.StandardClaims
+}
+
+type restInfo struct {
+	Cert string
+	Key  string
+	Port string
+}
+
+var flags restInfo
+
+// jwtKey is shared to encrypt the token. Fix the sharing method for production use.
+var jwtKey = []byte("my_secret_key")
+
+func main() {
+	flagInit()
+
+	http.HandleFunc("/signin", Signin)
+	http.HandleFunc("/welcome", Welcome)
+	http.HandleFunc("/refresh", Refresh)
+	log.Fatal(http.ListenAndServeTLS(":"+flags.Port, flags.Cert, flags.Key, nil))
 }
 
 func Signin(w http.ResponseWriter, r *http.Request) {
@@ -136,6 +147,8 @@ func Welcome(w http.ResponseWriter, r *http.Request) {
 }
 
 func Refresh(w http.ResponseWriter, r *http.Request) {
+	// TODO: Use the authorization header instead of cookies.
+	// This part does not currently work.  Not needed for the demo.
 	enableCors(&w)
 	setupResponse(&w, r)
 	if (*r).Method == "OPTIONS" {
@@ -201,4 +214,16 @@ func setupResponse(w *http.ResponseWriter, req *http.Request) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+}
+
+func flagInit() {
+	restcert := flag.String("restcert", "", "Rest Certificate File")
+	restkey := flag.String("restkey", "", "Rest Key File")
+	restport := flag.String("restport", "8113", "Rest interface https port")
+	flag.Parse()
+	flags.Cert = *restcert
+	flags.Key = *restkey
+	flags.Port = *restport
+	fmt.Printf("Flags used %+v\n", flags)
+	return
 }
