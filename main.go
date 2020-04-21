@@ -15,7 +15,7 @@ func main() {
 	http.HandleFunc("/signin", Signin)
 	http.HandleFunc("/welcome", Welcome)
 	http.HandleFunc("/refresh", Refresh)
-	log.Fatal(http.ListenAndServe(":8113", nil))
+	log.Fatal(http.ListenAndServeTLS(":8113", "/usr/local/nodes/certs/server.crt", "/usr/local/nodes/certs/server.key", nil))
 }
 
 var jwtKey = []byte("my_secret_key")
