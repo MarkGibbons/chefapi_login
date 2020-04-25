@@ -117,7 +117,6 @@ func Welcome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tknStr := strings.TrimSpace(splitToken[1])
-	fmt.Printf("U TOKEN S%+vS\n", tknStr)
 
 	// Initialize a new instance of `Claims`
 	claims := &Claims{}
@@ -147,25 +146,25 @@ func Welcome(w http.ResponseWriter, r *http.Request) {
 }
 
 func Refresh(w http.ResponseWriter, r *http.Request) {
-	// TODO: Use the authorization header instead of cookies.
-	// This part does not currently work.  Not needed for the demo.
+	// CORS
 	enableCors(&w)
 	setupResponse(&w, r)
 	if (*r).Method == "OPTIONS" {
 		return
 	}
-	// (BEGIN) The code uptil this point is the same as the first part of the `Welcome` route
-	// TODO: Get the auth token
-	c, err := r.Cookie("token")
-	if err != nil {
-		if err == http.ErrNoCookie {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
+
+	reqToken := r.Header.Get("Authorization")
+	splitToken := strings.Split(reqToken, "Bearer")
+
+	// Verify index before using
+	if len(splitToken) != 2 {
+		fmt.Printf("REQ %+v\n", reqToken)
+		fmt.Printf("Token %+v\n", splitToken)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	tknStr := c.Value
+	tknStr := strings.TrimSpace(splitToken[1])
+
 	claims := &Claims{}
 	tkn, err := jwt.ParseWithClaims(tknStr, claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
@@ -186,8 +185,8 @@ func Refresh(w http.ResponseWriter, r *http.Request) {
 
 	// We ensure that a new token is not issued until enough time has elapsed
 	// In this case, a new token will only be issued if the old token is within
-	// 30 seconds of expiry. Otherwise, return a bad request status
-	if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) > 30*time.Second {
+	// 2 hours of expiry. Otherwise, return a bad request status
+	if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) > 2*time.Hour {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
