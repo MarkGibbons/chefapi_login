@@ -62,8 +62,8 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the expected password from our in memory map
-	expectedPassword := "password"
+	// Get the expected password
+	expectedPassword := "pa"
 
 	// If a password exists for the given user
 	// AND, if it is the same as the password we received, the we can move ahead
