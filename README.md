@@ -1,3 +1,5 @@
+# chefapi_login
+
 The chefapi applications were written as demonstation code for using the chefapi. This code is in no way ready for production. Error handling, security considerations and some timing edge cases need to be dealt with to use this in production.  The login module should be replaced by some OATH2 handler and the rest of the chefapi code should be updated to deal with the changes. 
 
 Handle login processing for the chefapi applications.  Verify the password of the user and return a JWT token.  All users login with a password of "password". Replace this authentication mechanism with something real.

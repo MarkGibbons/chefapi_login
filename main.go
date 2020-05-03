@@ -1,5 +1,7 @@
 package main
 
+// TODO: Lower case the username to match the chef name that will be created
+
 import (
 	"encoding/json"
 	"flag"
